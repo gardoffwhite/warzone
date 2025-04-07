@@ -1,77 +1,118 @@
-const API_BASE = "https://warzonebackend-3il3.onrender.com"; // ← เปลี่ยนเป็นของคุณ
-let currentUser = null;
+const backend = "https://warzonebackend-3il3.onrender.com";
+let currentUser = "";
+let currentRole = "";
 
-function toggleRegister() {
-  document.getElementById("loginBox").classList.toggle("hidden");
-  document.getElementById("registerBox").classList.toggle("hidden");
-}
-
-async function register() {
-  const username = document.getElementById("registerUsername").value.trim();
-  const password = document.getElementById("registerPassword").value;
-  const confirmPassword = document.getElementById("registerConfirmPassword").value;
-
-  if (!username || !password || !confirmPassword)
-    return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-  if (password !== confirmPassword)
-    return alert("รหัสผ่านไม่ตรงกัน");
-
-  const res = await fetch(`${API_BASE}/auth/register`, {
+function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  fetch(backend + "/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) return alert(data.error || "สมัครไม่สำเร็จ");
-
-  alert("สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ");
-  toggleRegister();
+    body: JSON.stringify({ username, password })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.user) {
+        currentUser = username;
+        currentRole = data.user.role;
+        document.getElementById("auth-container").style.display = "none";
+        document.getElementById("gacha-container").style.display = "block";
+        if (currentRole === "admin") {
+          document.getElementById("admin-container").style.display = "block";
+        }
+        document.getElementById("display-username").innerText = username;
+        document.getElementById("token-count").innerText = data.user.token;
+      } else {
+        document.getElementById("auth-message").innerText = data.error;
+      }
+    });
 }
 
-async function login() {
-  const username = document.getElementById("loginUsername").value.trim();
-  const password = document.getElementById("loginPassword").value;
-
-  if (!username || !password) return alert("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
-
-  const res = await fetch(`${API_BASE}/auth/login`, {
+function register() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  fetch(backend + "/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) return alert(data.error || "เข้าสู่ระบบไม่สำเร็จ");
-
-  alert(`ยินดีต้อนรับ ${username}!`);
-  currentUser = data.user;
-
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("mainApp").classList.remove("hidden");
-
-  updateTokenDisplay();
+    body: JSON.stringify({ username, password })
+  })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("auth-message").innerText = data.success ? "สมัครสมาชิกสำเร็จ" : data.error;
+    });
 }
 
-async function gacha() {
-  if (!currentUser) return alert("กรุณาเข้าสู่ระบบ");
+function logout() {
+  location.reload();
+}
 
-  const res = await fetch(`${API_BASE}/gacha`, {
+function rollGacha() {
+  const character = document.getElementById("character-name").value;
+  fetch(backend + "/gacha", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: currentUser.username }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) return alert(data.error || "สุ่มล้มเหลว");
-
-  alert(`🎉 คุณได้รับ: ${data.item}`);
-  currentUser.token = data.tokenLeft;
-  updateTokenDisplay();
+    body: JSON.stringify({ username: currentUser, character })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.item) {
+        document.getElementById("gacha-result").innerHTML = \`
+          <h3>คุณได้รับ: \${data.item.name}</h3>
+          <img src="\${backend}/images/\${data.item.image}" />
+        \`;
+        document.getElementById("token-count").innerText = data.tokenLeft;
+      } else {
+        alert(data.error);
+      }
+    });
 }
 
-function updateTokenDisplay() {
-  document.getElementById("tokenCount").textContent = currentUser.token;
+function updateToken() {
+  const targetUser = document.getElementById("target-user").value;
+  const amount = parseInt(document.getElementById("token-amount").value);
+  fetch(backend + "/admin/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminUser: currentUser, targetUser, amount })
+  }).then(() => alert("อัปเดต Token แล้ว"));
 }
 
-document.getElementById("gachaButton").onclick = gacha;
+function uploadImage() {
+  const itemId = document.getElementById("item-id").value;
+  const file = document.getElementById("item-image").files[0];
+  const form = new FormData();
+  form.append("image", file);
+  form.append("itemId", itemId);
+  fetch(backend + "/admin/upload", {
+    method: "POST",
+    body: form
+  }).then(() => alert("อัปโหลดรูปเรียบร้อย"));
+}
+
+function updateRates() {
+  const rates = {
+    sword: parseInt(document.getElementById("rate-sword").value),
+    armor: parseInt(document.getElementById("rate-armor").value),
+    helmet: parseInt(document.getElementById("rate-helmet").value),
+    boots: parseInt(document.getElementById("rate-boots").value)
+  };
+  fetch(backend + "/admin/rates", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminUser: currentUser, rates })
+  }).then(() => alert("อัปเดตอัตราสุ่มเรียบร้อย"));
+}
+
+function loadLogs() {
+  fetch(backend + "/admin/logs?adminUser=" + currentUser)
+    .then(res => res.json())
+    .then(data => {
+      const div = document.getElementById("logs");
+      div.innerHTML = "<h4>Log ล่าสุด</h4>";
+      data.logs.slice(-10).reverse().forEach(log => {
+        div.innerHTML += \`
+          <p><strong>\${log.username}</strong> (\${log.character}) ได้รับ <em>\${log.item}</em> เวลา \${new Date(log.timestamp).toLocaleString()}</p>
+        \`;
+      });
+    });
+}
