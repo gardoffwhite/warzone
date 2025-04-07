@@ -1,4 +1,4 @@
-const API_BASE = "https://warzonebackend.onrender.com "; // ← เปลี่ยนเป็นของคุณ
+const API_BASE = "https://warzonebackend-3il3.onrender.com"; // ← เปลี่ยนเป็นของคุณ
 let currentUser = null;
 
 function toggleRegister() {
