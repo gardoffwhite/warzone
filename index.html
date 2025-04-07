@@ -1,29 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>Nage Gacha Slot</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; }
-    .hidden { display: none; }
-    #slot-machine {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 20px 0;
-    }
-    .reel {
-      font-size: 48px;
-      width: 60px;
-      height: 60px;
-      text-align: center;
-      border: 2px solid #333;
-      border-radius: 10px;
-      background: #eee;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WARZONE Gacha</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- truncated for brevity, already inserted in full above -->
+  <div class="container" id="auth-container">
+    <h1>เข้าสู่ระบบ / สมัครสมาชิก</h1>
+    <input type="text" id="username" placeholder="ชื่อผู้ใช้" />
+    <input type="password" id="password" placeholder="รหัสผ่าน" />
+    <button onclick="login()">เข้าสู่ระบบ</button>
+    <button onclick="register()">สมัครสมาชิก</button>
+    <div id="auth-message"></div>
+  </div>
+
+  <div class="container" id="gacha-container" style="display: none;">
+    <h2>ยินดีต้อนรับ <span id="display-username"></span></h2>
+    <p>Token คงเหลือ: <span id="token-count">0</span></p>
+    <input type="text" id="character-name" placeholder="ชื่อตัวละคร" />
+    <button onclick="rollGacha()">สุ่มไอเท็ม</button>
+    <button onclick="logout()">ออกจากระบบ</button>
+    <div id="gacha-result"></div>
+  </div>
+
+  <div class="container" id="admin-container" style="display: none;">
+    <h2>Admin Panel</h2>
+    <input type="text" id="target-user" placeholder="ชื่อผู้ใช้เป้าหมาย" />
+    <input type="number" id="token-amount" placeholder="จำนวน Token" />
+    <button onclick="updateToken()">เพิ่ม/ลด Token</button>
+
+    <h3>อัปเดตรูปภาพไอเท็ม</h3>
+    <select id="item-id">
+      <option value="sword">ดาบ</option>
+      <option value="armor">เกราะ</option>
+      <option value="helmet">หมวก</option>
+      <option value="boots">รองเท้า</option>
+    </select>
+    <input type="file" id="item-image" />
+    <button onclick="uploadImage()">อัปโหลด</button>
+
+    <h3>ตั้งค่าอัตราสุ่ม</h3>
+    <input type="number" id="rate-sword" placeholder="อัตราดาบ %" />
+    <input type="number" id="rate-armor" placeholder="อัตราเกราะ %" />
+    <input type="number" id="rate-helmet" placeholder="อัตราหมวก %" />
+    <input type="number" id="rate-boots" placeholder="อัตรารองเท้า %" />
+    <button onclick="updateRates()">อัปเดตอัตราสุ่ม</button>
+
+    <h3>Log การสุ่ม</h3>
+    <button onclick="loadLogs()">โหลด Log</button>
+    <div id="logs"></div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
